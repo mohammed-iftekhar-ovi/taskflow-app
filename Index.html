@@ -5,15 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Manager Mockup</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; font-size: 14px; }
-        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
         .sidebar-link.active { background-color: #eef2ff; color: #4f46e5; font-weight: 600; }
+        
         .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out; }
         .submenu.overflow-visible { overflow: visible; }
         .status-badge { padding: 1px 6px; border-radius: 10px; font-size: 11px; font-weight: 500; }
@@ -64,10 +66,10 @@
             color: #64748b;
             margin-left: 0.2rem;
         }
-        .countdown .expired {
+        .countdown .late {
             color: #ef4444;
             font-weight: 600;
-            font-size: 0.8rem;
+            font-size: 1rem;
         }
 
         .input-with-icon {
@@ -86,7 +88,7 @@
         .task-item { cursor: pointer; }
     </style>
 </head>
-<body class="bg-slate-100 antialiased text-slate-800">
+<body class="bg-slate-100 text-slate-800">
 
     <div id="app-wrapper" class="flex h-screen bg-white">
         <!-- Sidebar -->
@@ -96,7 +98,7 @@
                 <h1 class="text-lg font-bold ml-2 text-slate-800">TaskFlow</h1>
             </div>
             <nav id="sidebarNav" class="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
-                <a href="#" class="sidebar-link flex items-center px-3 py-1.5 text-slate-700 rounded-md active" data-id="home" data-title="Today's Tasks">
+                <a href="#" class="sidebar-link flex items-center px-3 py-1.5 text-slate-700 rounded-md" data-id="home" data-title="Today's Tasks">
                     <i class="fas fa-home w-5 text-center text-sm"></i><span class="ml-2 text-sm">Home</span>
                 </a>
                 <a href="#" class="sidebar-link flex items-center px-3 py-1.5 text-slate-600 hover:bg-slate-200 rounded-md" data-id="upcoming" data-title="Upcoming Tasks">
@@ -118,8 +120,11 @@
         <!-- Main Content -->
         <main class="flex-1 p-4 sm:p-5 lg:p-6 bg-slate-100 overflow-y-auto">
             <header class="flex items-center justify-between mb-6 gap-3">
-                <div><h2 id="mainHeader" class="text-3xl font-bold text-slate-900">Today's Tasks</h2><p class="text-slate-500 text-sm mt-1" id="currentDate"></p></div>
-                <div class="flex items-center gap-2">
+                <div>
+                    <h2 id="mainHeader" class="text-3xl font-semibold text-green-700"></h2>
+                    <p class="text-slate-500 text-sm mt-1" id="currentDate"></p>
+                </div>
+                <div class="flex items-center gap-4">
                     <button id="addTaskBtn" class="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-md shadow-sm transition-transform transform hover:scale-105 text-sm"><i class="fas fa-plus mr-2 text-xs"></i>Add Task</button>
                 </div>
             </header>
@@ -134,6 +139,45 @@
     </div>
     
     <!-- Modals -->
+    <div id="profileSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
+            <h3 class="text-xl font-bold mb-5 text-slate-900">Profile Settings</h3>
+            <form id="profileSettingsForm">
+                <div class="flex items-center gap-6">
+                    <div class="flex-shrink-0">
+                        <img id="profileImagePreview" class="h-24 w-24 rounded-full object-cover" src="https://placehold.co/100x100/E2E8F0/475569?text=?" alt="User avatar">
+                        <label for="profileImageUpload" class="mt-2 text-sm text-indigo-600 hover:text-indigo-500 cursor-pointer text-center block">Change</label>
+                        <input type="file" id="profileImageUpload" class="hidden" accept="image/*">
+                    </div>
+                    <div class="space-y-4 flex-1">
+                        <div>
+                            <label for="profileName" class="block text-xs font-medium text-slate-700 mb-1">Name</label>
+                            <input type="text" id="profileName" class="w-full px-3 py-1.5 border border-slate-300 bg-white rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label for="profileUsername" class="block text-xs font-medium text-slate-700 mb-1">Username</label>
+                            <input type="text" id="profileUsername" class="w-full px-3 py-1.5 border border-slate-300 bg-white rounded-md text-sm" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label for="profileEmail" class="block text-xs font-medium text-slate-700 mb-1">Email</label>
+                        <input type="email" id="profileEmail" class="w-full px-3 py-1.5 border border-slate-300 bg-slate-100 rounded-md text-sm" disabled>
+                    </div>
+                    <div>
+                        <label for="profilePhone" class="block text-xs font-medium text-slate-700 mb-1">Phone Number</label>
+                        <input type="tel" id="profilePhone" class="w-full px-3 py-1.5 border border-slate-300 bg-white rounded-md text-sm">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-5 mt-4 border-t">
+                    <button type="button" id="cancelProfileSettingsBtn" class="px-4 py-1.5 bg-slate-200 text-slate-800 rounded-md text-sm">Cancel</button>
+                    <button type="submit" class="px-5 py-1.5 bg-indigo-600 text-white rounded-md text-sm">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="signInModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 hidden items-center justify-center z-50 p-4 backdrop-blur-sm">
         <div class="bg-white/95 rounded-xl shadow-2xl p-6 w-full max-w-sm">
             <div class="text-center mb-6">
@@ -145,16 +189,16 @@
                 <div id="registerFields" class="hidden space-y-3">
                      <div>
                         <label for="authUsername" class="block text-xs font-medium text-slate-700 text-left mb-1">Username</label>
-                        <input type="text" id="authUsername" class="w-full px-3 py-1.5 border border-slate-300 rounded-md text-sm" autocomplete="username">
+                        <input type="text" id="authUsername" class="w-full px-3 py-1.5 border border-slate-300 bg-white rounded-md text-sm" autocomplete="username">
                     </div>
                 </div>
                 <div>
                     <label for="authEmail" class="block text-xs font-medium text-slate-700 text-left mb-1">Email</label>
-                    <input type="email" id="authEmail" class="w-full px-3 py-1.5 border border-slate-300 rounded-md text-sm" required autocomplete="email">
+                    <input type="email" id="authEmail" class="w-full px-3 py-1.5 border border-slate-300 bg-white rounded-md text-sm" required autocomplete="email">
                 </div>
                 <div>
                     <label for="authPassword" class="block text-xs font-medium text-slate-700 text-left mb-1">Password</label>
-                    <input type="password" id="authPassword" class="w-full px-3 py-1.5 border border-slate-300 rounded-md text-sm" required autocomplete="current-password">
+                    <input type="password" id="authPassword" class="w-full px-3 py-1.5 border border-slate-300 bg-white rounded-md text-sm" required autocomplete="current-password">
                 </div>
                 <div id="authOptions" class="flex justify-between items-center text-xs">
                     <label class="flex items-center text-slate-600">
@@ -193,7 +237,7 @@
 
     <div id="taskModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-3xl">
-            <h3 id="taskModalTitle" class="text-xl font-bold mb-5">Add a New Task</h3>
+            <h3 id="taskModalTitle" class="text-xl font-bold mb-5 text-slate-900">Add a New Task</h3>
             <form id="taskForm">
                 <input type="hidden" id="taskId">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -203,12 +247,12 @@
                             <label for="taskName" class="block text-xs font-medium text-slate-700 mb-1">Task Name</label>
                             <div class="input-with-icon">
                                 <i class="fas fa-tasks"></i>
-                                <input type="text" id="taskName" class="w-full px-3 py-1.5 border border-slate-300 rounded-md text-sm" required>
+                                <input type="text" id="taskName" class="w-full px-3 py-1.5 border border-slate-300 bg-white rounded-md text-sm" required>
                             </div>
                         </div>
                         <div>
                             <label for="taskDescription" class="block text-xs font-medium text-slate-700 mb-1">Description / Instructions</label>
-                            <textarea id="taskDescription" rows="5" class="w-full px-3 py-1.5 border border-slate-300 rounded-md text-sm" placeholder="Add more details about the task..."></textarea>
+                            <textarea id="taskDescription" rows="5" class="w-full px-3 py-1.5 border border-slate-300 bg-white rounded-md text-sm" placeholder="Add more details about the task..."></textarea>
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">Attachments</label>
@@ -232,25 +276,25 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="taskDueDate" class="block text-xs font-medium text-slate-700 mb-1">Due Date</label>
-                                <input type="date" id="taskDueDate" class="w-full px-3 py-1.5 border border-slate-300 rounded-md text-sm">
+                                <input type="date" id="taskDueDate" class="w-full px-3 py-1.5 border border-slate-300 bg-white rounded-md text-sm">
                             </div>
                             <div>
                                 <label for="taskDueTime" class="block text-xs font-medium text-slate-700 mb-1">Due Time</label>
-                                <input type="time" id="taskDueTime" class="w-full px-3 py-1.5 border border-slate-300 rounded-md text-sm">
+                                <input type="time" id="taskDueTime" class="w-full px-3 py-1.5 border border-slate-300 bg-white rounded-md text-sm">
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label for="taskProject" class="block text-xs font-medium text-slate-700 mb-1">Project</label>
-                                <select id="taskProject" class="w-full px-3 py-1.5 border border-slate-300 rounded-md text-sm"></select>
+                                <select id="taskProject" class="w-full px-3 py-1.5 border border-slate-300 bg-white rounded-md text-sm"></select>
                             </div>
                             <div>
                                 <label for="taskPriority" class="block text-xs font-medium text-slate-700 mb-1">Priority</label>
-                                <select id="taskPriority" class="w-full px-3 py-1.5 border border-slate-300 rounded-md text-sm"><option>Low</option><option selected>Medium</option><option>High</option></select>
+                                <select id="taskPriority" class="w-full px-3 py-1.5 border border-slate-300 bg-white rounded-md text-sm"><option>Low</option><option selected>Medium</option><option>High</option></select>
                             </div>
                             <div>
                                 <label for="taskStatus" class="block text-xs font-medium text-slate-700 mb-1">Status</label>
-                                <select id="taskStatus" class="w-full px-3 py-1.5 border border-slate-300 rounded-md text-sm"><option>To Do</option><option>In Progress</option><option>Needs Revision</option><option>Completed</option></select>
+                                <select id="taskStatus" class="w-full px-3 py-1.5 border border-slate-300 bg-white rounded-md text-sm"><option>To Do</option><option>In Progress</option><option>Needs Revision</option><option>Completed</option></select>
                             </div>
                         </div>
                         <div>
@@ -333,6 +377,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, collection, query, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // ===================================================================================
         // ============================ FIREBASE CONFIGURATION ===============================
@@ -355,6 +400,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+        const storage = getStorage(app);
 
         // --- LOCAL STATE ---
         let localState = {
@@ -383,6 +429,12 @@
         const taskFormEl = document.getElementById('taskForm');
         const taskDetailModal = document.getElementById('taskDetailModal');
         const archiveConfirmModal = document.getElementById('archiveConfirmModal');
+        const projectForm = document.getElementById('projectForm');
+        const subProjectForm = document.getElementById('subProjectForm');
+        const authToggleLink = document.getElementById('authToggleLink');
+        const profileSettingsModal = document.getElementById('profileSettingsModal');
+        const profileSettingsForm = document.getElementById('profileSettingsForm');
+        const cancelProfileSettingsBtn = document.getElementById('cancelProfileSettingsBtn');
 
         // --- RENDER FUNCTIONS ---
         function renderAll() {
@@ -484,11 +536,13 @@
                         ${mainProjectName ? `<p class="text-xs text-slate-400 font-medium truncate" title="Project: ${mainProjectName}">[${mainProjectName}]</p>` : ''}
                     </div>
                     <div class="flex items-center gap-4 flex-shrink-0">
-                        <div class="flex items-center text-xs text-slate-500">
-                            <i class="fas fa-flag ${priorityColors[t.priority]} mr-1.5"></i><span class="mr-3">${t.priority}</span>
+                        <div class="flex items-center text-xs text-slate-500 w-20">
+                            <i class="fas fa-flag ${priorityColors[t.priority]} mr-1.5"></i><span>${t.priority}</span>
+                        </div>
+                        <div class="w-24">
                             <span class="status-badge ${statusColors[t.status]}">${t.status}</span>
                         </div>
-                        <div class="countdown" data-due-date="${t.dueDate}" data-due-time="${t.dueTime || ''}"></div>
+                        <div class="countdown w-48 text-right" data-due-date="${t.dueDate}" data-due-time="${t.dueTime || ''}"></div>
                     </div>`;
                 taskListEl.appendChild(taskEl);
             });
@@ -504,7 +558,7 @@
             const completedTasks = localState.tasks.filter(t => t.status === 'Completed').length;
 
             summaryBarEl.innerHTML = `
-                <div class="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm text-sm">
+                <div class="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm text-sm border border-slate-200">
                     <div class="flex items-center gap-6">
                         <div class="flex items-center gap-2">
                             <span class="text-slate-600">Active Tasks:</span>
@@ -564,7 +618,12 @@
                 const distance = new Date(dueDateTimeString).getTime() - new Date().getTime();
 
                 if (distance < 0) {
-                    el.innerHTML = `<span class="expired">Expired</span>`; return;
+                    const absDistance = Math.abs(distance);
+                    const d = Math.floor(absDistance / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((absDistance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((absDistance % (1000 * 60 * 60)) / (1000 * 60));
+                    el.innerHTML = `<span class="late">${d}d ${h}h ${m}m late</span>`;
+                    return;
                 }
 
                 const d = Math.floor(distance / (1000 * 60 * 60 * 24));
@@ -585,17 +644,32 @@
             if (user && !user.isAnonymous) {
                 const profilePath = `/users/${user.uid}`;
                 const profileDoc = await getDoc(doc(db, profilePath));
-                const profileData = profileDoc.exists() ? profileDoc.data() : { username: user.email };
+                const profileData = profileDoc.exists() ? profileDoc.data() : { username: user.email, name: '', phone: '', photoURL: '' };
 
                 authContainer.innerHTML = `
-                    <div class="flex items-center">
-                        <img class="h-8 w-8 rounded-full object-cover" src="https://placehold.co/100x100/E2E8F0/475569?text=${profileData.username.charAt(0).toUpperCase()}" alt="User avatar">
+                    <div class="flex items-center cursor-pointer" id="profile-section">
+                        <img class="h-8 w-8 rounded-full object-cover" src="${profileData.photoURL || `https://placehold.co/100x100/E2E8F0/475569?text=${profileData.username.charAt(0).toUpperCase()}`}" alt="User avatar">
                         <div class="ml-2 overflow-hidden">
-                            <p class="text-sm font-semibold text-slate-700 truncate">${profileData.username}</p>
-                            <a href="#" class="text-xs text-slate-500 hover:text-indigo-600" id="signOutBtn">Sign Out</a>
+                            <p class="text-sm font-semibold text-slate-700 truncate">${profileData.name || profileData.username}</p>
+                            <div class="text-xs">
+                                <a href="#" class="text-slate-500 hover:text-indigo-600" id="settingsBtn">Settings</a>
+                                <span class="mx-1 text-slate-400">·</span>
+                                <a href="#" class="text-slate-500 hover:text-indigo-600" id="signOutBtn">Sign Out</a>
+                            </div>
                         </div>
                     </div>`;
                 document.getElementById('signOutBtn').addEventListener('click', () => signOut(auth));
+                document.getElementById('profile-section').addEventListener('click', (e) => {
+                    if(e.target.id !== 'signOutBtn') {
+                        document.getElementById('profileName').value = profileData.name || '';
+                        document.getElementById('profileUsername').value = profileData.username || '';
+                        document.getElementById('profileEmail').value = user.email;
+                        document.getElementById('profilePhone').value = profileData.phone || '';
+                        document.getElementById('profileImagePreview').src = profileData.photoURL || `https://placehold.co/100x100/E2E8F0/475569?text=${profileData.username.charAt(0).toUpperCase()}`;
+                        profileSettingsModal.style.display = 'flex';
+                    }
+                });
+                setGreeting();
                 signInModal.style.display = 'none';
                 appWrapper.classList.remove('blur-sm', 'pointer-events-none');
             } else {
@@ -605,6 +679,7 @@
                 });
                 appWrapper.classList.add('blur-sm', 'pointer-events-none');
                 signInModal.style.display = 'flex';
+                setGreeting();
             }
         }
 
@@ -626,7 +701,6 @@
                 if (id === 'home' || id === 'upcoming') localState.activeView = { type: 'home', id, title };
                 else if (parent) localState.activeView = { type: 'sub-project', id, title };
                 else localState.activeView = { type: 'project', id, title };
-                mainHeader.textContent = title;
                 renderTasks();
             }
         });
@@ -956,7 +1030,6 @@
         }
 
         // Auth Form Toggle
-        const authToggleLink = document.getElementById('authToggleLink');
         authToggleLink.addEventListener('click', (e) => {
             e.preventDefault();
             localState.isRegisterMode = !localState.isRegisterMode;
@@ -1019,7 +1092,10 @@
                     const profilePath = `/users/${user.uid}`;
                     await setDoc(doc(db, profilePath), {
                         username,
-                        email
+                        email,
+                        name: username,
+                        phone: '',
+                        photoURL: ''
                     });
 
                 } else {
@@ -1051,17 +1127,92 @@
             });
         });
 
-        // --- INITIALIZATION ---
-        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-        setInterval(updateCountdowns, 1000);
-        
-        onAuthStateChanged(auth, async (user) => {
-            renderAuthUI(user);
-            if (user && !user.isAnonymous) {
-                setupFirestoreListeners(user.uid);
-            } else {
-                cleanupFirestoreListeners();
+        function setGreeting() {
+            const hour = new Date().getHours();
+            let greeting = "Good Morning";
+            if (hour >= 18) {
+                greeting = "Good Evening";
+            } else if (hour >= 12) {
+                greeting = "Good Afternoon";
             }
+            mainHeader.textContent = greeting;
+        }
+
+        document.getElementById('profileImageUpload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.getElementById('profileImagePreview').src = event.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        profileSettingsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = auth.currentUser;
+            if (!user) return;
+            
+            const submitBtn = profileSettingsForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            try {
+                const name = document.getElementById('profileName').value;
+                const username = document.getElementById('profileUsername').value;
+                const phone = document.getElementById('profilePhone').value;
+                const file = document.getElementById('profileImageUpload').files[0];
+                
+                const profilePath = `/users/${user.uid}`;
+                const profileRef = doc(db, profilePath);
+
+                const dataToUpdate = {
+                    name,
+                    username,
+                    phone,
+                };
+
+                if (file) {
+                    const storageRef = ref(storage, `profile-pictures/${user.uid}`);
+                    await uploadBytes(storageRef, file);
+                    dataToUpdate.photoURL = await getDownloadURL(storageRef);
+                }
+
+                await setDoc(profileRef, dataToUpdate, { merge: true });
+
+                profileSettingsModal.style.display = 'none';
+                renderAuthUI(user);
+            } catch (error) {
+                console.error("Error updating profile:", error);
+                alert("Could not save profile. Please try again.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Save Changes';
+            }
+        });
+
+        cancelProfileSettingsBtn.addEventListener('click', () => {
+             profileSettingsModal.style.display = 'none';
+        });
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            setGreeting();
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            setInterval(updateCountdowns, 1000);
+            
+            // Set initial active sidebar link
+            document.querySelector('.sidebar-link[data-id="home"]').classList.add('active');
+
+            onAuthStateChanged(auth, async (user) => {
+                renderAuthUI(user);
+                if (user && !user.isAnonymous) {
+                    setupFirestoreListeners(user.uid);
+                } else {
+                    cleanupFirestoreListeners();
+                }
+            });
         });
 
     </script>
