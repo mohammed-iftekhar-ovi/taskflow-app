@@ -173,6 +173,9 @@
                         <p class="text-slate-500 dark:text-slate-400 text-sm mt-1" id="currentDate"></p>
                     </div>
                     <div class="flex items-center gap-2">
+                        <button id="liveMeetingBtn" class="flex items-center justify-center bg-green-500 hover:bg-green-600 text-white font-bold py-1.5 px-3 rounded-md shadow-sm transition-transform transform hover:scale-105 text-sm">
+                            <i class="fas fa-video mr-2 text-xs"></i>Live Meeting
+                        </button>
                         <button id="theme-toggle" class="h-9 w-9 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
                             <i id="theme-icon" class="fas"></i>
                         </button>
@@ -433,9 +436,9 @@
                 <div class="flex-grow border-t border-gray-300 dark:border-slate-600"></div>
             </div>
             <div class="flex justify-center space-x-3">
-                <button class="social-login-btn w-10 h-10 border border-gray-300 dark:border-slate-600 rounded-md flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700"><i class="fab fa-google text-lg"></i></button>
-                <button class="social-login-btn w-10 h-10 border border-gray-300 dark:border-slate-600 rounded-md flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700"><i class="fab fa-github text-lg"></i></button>
-                <button class="social-login-btn w-10 h-10 border border-gray-300 dark:border-slate-600 rounded-md flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700"><i class="fab fa-facebook text-lg"></i></button>
+                <button data-provider="google" class="social-login-btn w-10 h-10 border border-gray-300 dark:border-slate-600 rounded-md flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700"><i class="fab fa-google text-lg"></i></button>
+                <button data-provider="apple" class="social-login-btn w-10 h-10 border border-gray-300 dark:border-slate-600 rounded-md flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700"><i class="fab fa-apple text-lg"></i></button>
+                <button data-provider="github" class="social-login-btn w-10 h-10 border border-gray-300 dark:border-slate-600 rounded-md flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700"><i class="fab fa-github text-lg"></i></button>
             </div>
             <p class="text-center text-xs text-slate-500 dark:text-slate-400 mt-5">
                 <span id="authToggleText">Don't have an account?</span>
@@ -579,7 +582,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, collection, query, getDocs, writeBatch, arrayUnion, arrayRemove, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
@@ -626,6 +629,7 @@
             const completedTasksView = document.getElementById('completed-tasks-view');
             const mainHeader = document.getElementById('mainHeader');
             const taskListEl = document.getElementById('taskList');
+            const summaryBarEl = document.getElementById('summaryBar');
             const projectListEl = document.getElementById('projectList');
             const sidebarNav = document.getElementById('sidebarNav');
             const taskModal = document.getElementById('taskModal');
@@ -649,6 +653,7 @@
             const toastNotification = document.getElementById('toast-notification');
             const toastMessage = document.getElementById('toast-message');
             const aiHubModal = document.getElementById('aiHubModal');
+            const liveMeetingBtn = document.getElementById('liveMeetingBtn');
             
             // --- THEME LOGIC ---
             function updateThemeIcon(theme) {
@@ -687,6 +692,10 @@
             }
 
             function renderProjects() {
+                if (!localState.userId) {
+                    projectListEl.innerHTML = '';
+                    return;
+                }
                 if (localState.projects.length === 0) {
                     projectListEl.innerHTML = `<p class="text-slate-400 dark:text-slate-500 text-xs px-3 py-2">No projects yet.</p>`;
                     return;
@@ -730,6 +739,10 @@
             }
             
             function renderTasks() {
+                if (!localState.userId) {
+                    renderLoginPrompt();
+                    return;
+                }
                 const activeTasks = localState.tasks.filter(t => t.status !== 'Completed');
                 let tasksToRender = [];
                 
@@ -799,8 +812,12 @@
             }
 
             function renderSummaryBar() {
-                const summaryBarEl = document.getElementById('summaryBar');
                 if (!summaryBarEl) return;
+
+                if (!localState.userId) {
+                    summaryBarEl.innerHTML = '';
+                    return;
+                }
 
                 const totalTasks = localState.tasks.filter(t => t.status !== 'Completed').length;
                 const revisionTasks = localState.tasks.filter(t => t.status === 'Needs Revision').length;
@@ -830,6 +847,21 @@
                     mainView.style.display = 'none';
                     taskDetailPage.style.display = 'none';
                     completedTasksView.style.display = 'block';
+                });
+            }
+
+            function renderLoginPrompt() {
+                taskListEl.innerHTML = `
+                    <div class="text-center py-6 border-t border-slate-200 dark:border-slate-700 mt-4">
+                        <p class="text-slate-500 dark:text-slate-400">
+                            <a href="#" id="promptSignInLink" class="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">Sign in</a> to manage your projects and tasks.
+                        </p>
+                    </div>
+                `;
+                summaryBarEl.innerHTML = '';
+                document.getElementById('promptSignInLink').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    signInModal.style.display = 'flex';
                 });
             }
 
@@ -955,8 +987,6 @@
                     document.getElementById('showSignInBtn').addEventListener('click', () => {
                         signInModal.style.display = 'flex';
                     });
-                    signInModal.style.display = 'flex';
-                    document.body.classList.add('overflow-hidden');
                 }
                 setGreeting();
             }
@@ -1320,6 +1350,7 @@
             function cleanupFirestoreListeners() {
                 if (localState.projectsUnsubscribe) localState.projectsUnsubscribe();
                 if (localState.tasksUnsubscribe) localState.tasksUnsubscribe();
+                localState.userId = null;
                 localState.projects = [];
                 localState.tasks = [];
                 renderAll();
@@ -1400,7 +1431,36 @@
             });
 
             document.querySelectorAll('.social-login-btn').forEach(btn => {
-                btn.addEventListener('click', () => showToast("Social login is coming soon!"));
+                btn.addEventListener('click', async () => {
+                    const providerName = btn.dataset.provider;
+                    const errorDiv = document.getElementById('authError');
+                    errorDiv.textContent = '';
+
+                    if (providerName === 'google') {
+                        const provider = new GoogleAuthProvider();
+                        try {
+                            const result = await signInWithPopup(auth, provider);
+                            const user = result.user;
+                            const profilePath = `/users/${user.uid}`;
+                            const profileDoc = await getDoc(doc(db, profilePath));
+                            if (!profileDoc.exists()) {
+                                await setDoc(doc(db, profilePath), { 
+                                    username: user.displayName || user.email, 
+                                    email: user.email, 
+                                    name: user.displayName || '', 
+                                    phone: user.phoneNumber || '', 
+                                    photoURL: user.photoURL || '' 
+                                });
+                            }
+                        } catch (error) {
+                            errorDiv.textContent = error.message;
+                        }
+                    } else if (providerName === 'apple') {
+                        showToast("Apple Sign-In is coming soon!");
+                    } else if (providerName === 'github') {
+                        showToast("GitHub Sign-In is coming soon!");
+                    }
+                });
             });
 
              document.querySelectorAll('.ai-feature-btn').forEach(btn => {
@@ -1606,6 +1666,12 @@
                 if (task) { openTaskModal('edit', { dataset: { id: taskId } }); }
             });
 
+            signInModal.addEventListener('click', (e) => {
+                if (e.target === signInModal) {
+                    signInModal.style.display = 'none';
+                }
+            });
+
             document.getElementById('requestRevisionBtn').addEventListener('click', () => revisionModal.style.display = 'flex');
             cancelRevisionBtn.addEventListener('click', () => revisionModal.style.display = 'none');
 
@@ -1667,6 +1733,45 @@
                 }
             });
 
+            // --- LIVE MEETING API INTEGRATION ---
+            const initializeMeetingFallback = () => {
+                liveMeetingBtn.addEventListener('click', () => {
+                    showToast("Live Meeting feature is currently unavailable.");
+                });
+            };
+            
+            // 1. Create a new <script> tag to load your hosted API file.
+            const meetingScript = document.createElement('script');
+            meetingScript.type = 'module';
+            // 2. IMPORTANT: The URL has been updated with your live hosting link.
+            meetingScript.src = 'https://gowafir-taskflow.web.app/meeting-hub.js';
+            document.body.appendChild(meetingScript);
+
+            // 3. This runs after the meeting script has loaded successfully.
+            meetingScript.onload = () => {
+                try {
+                    // 4. Initialize the Meeting Hub.
+                    // Assumes the loaded script provides a global `LiveMeeting` object.
+                    // The `firebaseConfig` variable is already defined at the top of this script.
+                    LiveMeeting.init(firebaseConfig);
+                    
+                    // 5. Tell the button what to do when clicked.
+                    liveMeetingBtn.addEventListener('click', () => {
+                        LiveMeeting.open();
+                    });
+                } catch (error) {
+                    console.error("Error initializing Live Meeting API:", error);
+                    initializeMeetingFallback();
+                }
+            };
+            
+            // 6. If the script itself can't be loaded (e.g., 404 error), set up a fallback.
+            meetingScript.onerror = () => {
+                console.error("Failed to load the meeting hub script from the specified URL.");
+                initializeMeetingFallback();
+            };
+
+
             // --- INITIALIZATION ---
             const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
             updateThemeIcon(currentTheme);
@@ -1683,6 +1788,7 @@
                     setupFirestoreListeners(user.uid);
                 } else {
                     cleanupFirestoreListeners();
+                    renderLoginPrompt();
                 }
                 loadingOverlay.style.opacity = '0';
                 setTimeout(() => loadingOverlay.style.display = 'none', 300);
